@@ -26,16 +26,20 @@ import {
   DialogContentText,
   DialogTitle,
   TextField,
+  Menu,
+  MenuItem,
  
   
 } from "@material-ui/core";
 import { Link } from "react-router-dom";
-import { Add,Image,Menu,CloudUpload } from "@material-ui/icons";
+import { Add,Image,MenuOpen,CloudUpload,Delete,Edit } from "@material-ui/icons";
 import { KeyboardDatePicker, MuiPickersUtilsProvider,} from "@material-ui/pickers";
 import { createMuiTheme } from "@material-ui/core/styles";
-
+import {get,post,deletef,put} from "../../services/apicalls";
+import {fetchproject,addproject,deleteproject,updateproject} from "../../apis/project_apis";
+import {RotateLoader,HashLoader} from "react-spinners";
 import "./index.css";
-
+import LoadingOverlay from 'react-loading-overlay';
 const theme = createMuiTheme({
   palette: {
     primary: {
@@ -52,14 +56,36 @@ const theme = createMuiTheme({
     },
   },
 });
+var data = [];
 
 export default function Index(props) {
+  const[check,setcheck]=useState(false);
     const [open,setopen]=useState(false);
+    const [add,setadd]=useState(false);
+    const [updateb,setupdateb]=useState(false);
     const [projectlist,setproject]=useState([]);
-    var temp1="";
-    var temp2="";
+    console.log("cdscs");
+    (async ()=>{
+      if(!check)
+      {
+      var data = await get(fetchproject());
+      console.log(data);
+      setcheck(true);
+
+      setproject(data);
+      }
+      
+    })();
+    var temp1="null";
+    var temp2="null";
+    var temp3="null";
     var temparray=[];
+    const [updatetemp1,setupdatetemp1]=useState("");
+    const [updatetemp2,setupdatetemp2]=useState("");
+    const [updatetemp3,setupdatetemp3]=useState("");
+
     var i=0;
+    const [booleanarray,setbooleanarray] = useState(projectlist.map((value,index)=>false));
     while (i<projectlist.length)
     {
       var temp = projectlist.slice(i,i+3);
@@ -78,7 +104,9 @@ export default function Index(props) {
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
       >
+       <LoadingOverlay  active={add}  spinner={<HashLoader color={"#2196f3"}/>}>
         <DialogTitle id="alert-dialog-title">{"Add Project"}</DialogTitle>
+       
         <DialogContent>
           <TextField style={{marginTop:"2%"}} label="Project Name" onChange={(e)=>{
             temp1=e.target.value;
@@ -93,31 +121,48 @@ export default function Index(props) {
           Upload Image
           </Grid>
           <Grid item>
-         <input type="file"></input>
+         <input type="file" onChange={(e)=>{
+           temp3=e.target.files[0];
+         }}></input>
           </Grid>
          
           </Grid>
          
          
         </DialogContent>
+       
         <DialogActions>
           <Button onClick={()=>{
               setopen(false);
           }} color="primary">
             Cancel
           </Button>
-          <Button onClick={()=>{
+          <Button onClick={async (e)=>{
+            setadd(true);
             var temp=projectlist;
+            var body = new FormData();
+            body.append("project_name",temp1);
+            body.append("project_deadline",temp2);
+            body.append("avatar",temp3);
+            
+            var data = await post(addproject(),body);
+
             temp.push({
               projectname:temp1,
               deadline:temp2,
             });
             setproject(temp);
+            setcheck(false);
               setopen(false);
+              setadd(false);
+              temp1="null";
+              temp2="null";
+              temp3="null";
           }} color="primary" autoFocus>
             ADD
           </Button>
         </DialogActions>
+        </LoadingOverlay>
       </Dialog>
         <AppBar position="sticky">
           <Toolbar>
@@ -131,7 +176,8 @@ export default function Index(props) {
         </IconButton></Container>
           </Toolbar>
         </AppBar>
-      {temparray.length==0?(
+        {!check?<Container align="center" style={{marginTop:"10%"}}><RotateLoader color={"#2196f3"}/></Container>:<></>}
+      {temparray.length==0&&check?(
         <Container align="center" style={{marginTop:"2%"}}>
           <Typography variant="h5" style={{fontWeight:"bolder",color:"grey"}}>No Project Yet</Typography>
           <Fab color="primary" style={{marginTop:"1%"}} onClick={(e)=>{
@@ -145,32 +191,112 @@ export default function Index(props) {
             <Grid item xs={3} onClick={(e)=>{
               
             }}>
-            <Link to={"/project/"+index+"/"+value.projectname}>
+            <LoadingOverlay active={booleanarray[index]}  spinner={<HashLoader color={"#2196f3"}/>}>
             <Card>
                   <CardActionArea>
                   <ListItem>
         <ListItemAvatar>
-          <Avatar>
-            <Image />
+          <Avatar src={`https://kanzd123.pythonanywhere.com${value.project_image}`}>
+           
           </Avatar>
         </ListItemAvatar>
-        <ListItemText primary={value.projectname} secondary={value.deadline} />
+        <Link to={"/project/"+value.id+"/"+value.project_name}>
+        <ListItemText primary={value.project_name} secondary={value.project_deadline} />
+        </Link>
+       
         <ListItemSecondaryAction >
-        <IconButton>
-        <Menu />
-        </IconButton>
         
+        <IconButton onClick={(e)=>{
+          setupdatetemp1(value.project_name);
+          setupdatetemp2(value.project_deadline);
+          setupdatetemp3(value.id)
+          
+          setupdateb(true);
+        }}>
+        <Edit />
+        </IconButton>
+        <IconButton onClick={async (e)=>{
+          var temp11 = booleanarray;
+          temp11[index]=true;
+          setbooleanarray(temp11);
+          var data = await deletef(deleteproject(value.id));
+          var temp11 = booleanarray;
+          temp11[index]=false;
+          setbooleanarray(temp11);
+          setcheck(false);
+
+        }}>
+        <Delete />
+        </IconButton>
         </ListItemSecondaryAction>
         </ListItem>
                   </CardActionArea>
               </Card>
-            </Link>
+              </LoadingOverlay>
               
           </Grid>
           ))}
         </Grid>
         ))}
-        
+        <Dialog
+        open={updateb}
+        onClose={()=>{
+            setupdateb(false);
+        }}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+       <LoadingOverlay  active={add}  spinner={<HashLoader color={"#2196f3"}/>}>
+        <DialogTitle id="alert-dialog-title">{"Edit Project"}</DialogTitle>
+       
+        <DialogContent>
+          <TextField style={{marginTop:"2%"}} label="Project Name" defaultValue={updatetemp1} onChange={(e)=>{
+            setupdatetemp1(e.target.value);
+          
+          }}  variant="outlined" fullWidth/>
+          
+          <TextField style={{marginTop:"2%"}} label="deadline" defaultValue={updatetemp2} onChange={(e)=>{
+           setupdatetemp2(e.target.value);
+          }}  type="date" variant="outlined" fullWidth/>
+          
+         
+         
+        </DialogContent>
+       
+        <DialogActions>
+          <Button onClick={()=>{
+              setupdateb(false);
+          }} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={async (e)=>{
+            setadd(true);
+            var temp=projectlist;
+          
+            
+            var data = await put(updateproject(),{
+              "id":updatetemp3,
+              "project_name":updatetemp1,
+              "project_deadline":updatetemp2,
+            });
+
+            // temp.push({
+            //   projectname:temp1,
+            //   deadline:temp2,
+            // });
+            // setproject(temp);
+            setcheck(false);
+            setupdateb(false);
+              setadd(false);
+              temp1="null";
+              temp2="null";
+              temp3="null";
+          }} color="primary" autoFocus>
+            UPDATE
+          </Button>
+        </DialogActions>
+        </LoadingOverlay>
+      </Dialog>
       </MuiThemeProvider>
     </>
   );

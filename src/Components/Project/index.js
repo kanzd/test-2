@@ -1,7 +1,9 @@
 import React, { useState } from "react";
-import {  MuiThemeProvider,Dialog,
-    TextField,
-    Grid,
+import {  
+  MuiThemeProvider,
+  Dialog,
+  TextField,
+  Grid,
   AppBar,
   Toolbar,
   Typography,
@@ -17,19 +19,20 @@ import {  MuiThemeProvider,Dialog,
   ListItemAvatar,
   ListItemText,
   ListItemSecondaryAction,
-    Button,
-    DialogActions,
-    DialogContent,
-    DialogContentText,
-    IconButton,
-
-    DialogTitle,} from "@material-ui/core";
-import {Image,Menu,Add,Work,ArrowBack} from "@material-ui/icons";
+  Button,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  IconButton,
+  DialogTitle,
+ } from "@material-ui/core";
+import {Image,Menu,Add,Work,ArrowBack,Delete,Edit, EditAttributes} from "@material-ui/icons";
 import { Link } from "react-router-dom";
 import { createMuiTheme } from "@material-ui/core/styles";
-
-
-
+import {get,post,deletef,put} from "../../services/apicalls";
+import {fetchtask,addtask,deletetask,updatetask} from "../../apis/task_apis";
+import LoadingOverlay from 'react-loading-overlay';
+import {RotateLoader,HashLoader} from "react-spinners";
 const theme = createMuiTheme({
     palette: {
       primary: {
@@ -62,7 +65,27 @@ const theme = createMuiTheme({
     const [open,setopen]=useState(false);
     var temp1="";
     var temp2="";
+    const [add,setadd]=useState(false);
+    const [upd,setupd]=useState(false);
     const [tasklist,settasklist]=useState([]);
+    const[check,setcheck]=useState(false);
+    const [updateb,setupdateb]=useState(false);
+    const [updatetemp1,setupdatetemp1]=useState("");
+    const [updatetemp2,setupdatetemp2]=useState("");
+    const [updatetemp3,setupdatetemp3]=useState("");
+    
+    (async ()=>{
+      if(!check)
+      {
+      var data = await get(fetchtask(props.match.params.id));
+      console.log(data);
+      setcheck(true);
+
+      settasklist(data);
+      }
+      
+    })();
+   
       return (
           <>
                <MuiThemeProvider theme={theme}>
@@ -74,6 +97,7 @@ const theme = createMuiTheme({
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
       >
+      <LoadingOverlay  active={add}  spinner={<HashLoader color={"#2196f3"}/>}>
         <DialogTitle id="alert-dialog-title">{"Add Task"}</DialogTitle>
         <DialogContent>
           <TextField style={{marginTop:"2%"}} label="Task Name" onChange={(e)=>{
@@ -94,17 +118,27 @@ const theme = createMuiTheme({
           }} color="primary">
             Cancel
           </Button>
-          <Button onClick={()=>{
-              var temp=tasklist;
-              temp.push( {taskdetails:temp2,
-      taskName:temp1,
+          <Button onClick={async (e)=>{
+    //           var temp=tasklist;
+    //           temp.push( {taskdetails:temp2,
+    //   taskName:temp1,
+    // });
+    // settasklist(temp);
+    setadd(true);
+    var data =await post(addtask(),{
+      "Task_name":temp1,
+      "Task_details":temp2,
+      "project_id":props.match.params.id
     });
-    settasklist(temp);
+    
+    setadd(false);
               setopen(false);
+              setcheck(false);
           }} color="primary" autoFocus>
             ADD
           </Button>
         </DialogActions>
+        </LoadingOverlay>
       </Dialog>
       <AppBar position="sticky">
           <Toolbar>
@@ -120,6 +154,8 @@ const theme = createMuiTheme({
           </Toolbar>
         </AppBar>
         <Container algin="center" style={{marginTop:"3%"}}>
+        {!check?<Container align="center"><RotateLoader color={"#2196f3"}/></Container>
+        :<></>}
         {tasklist.map((value,index)=>(<Card style={{marginTop:"1%"}}>
             <CardActionArea>
             <ListItem>
@@ -128,10 +164,22 @@ const theme = createMuiTheme({
             <Work />
           </Avatar>
         </ListItemAvatar>
-        <ListItemText primary={value.taskName}secondary={value.taskdetails} />
+        <ListItemText primary={value.Task_name}secondary={value.Task_details} />
         <ListItemSecondaryAction >
-        <IconButton>
-        <Menu />
+        <IconButton onClick={(e)=>{
+          setupdatetemp1(value.Task_name);
+          setupdatetemp2(value.Task_details);
+          setupdatetemp3(value.id);
+          setupdateb(true);
+        }}>
+        <Edit />
+        </IconButton>
+        <IconButton onClick={async (e)=>{
+          
+          var data = await deletef(deletetask(value.id));
+          setcheck(false);
+        }}>
+        <Delete />
         </IconButton>
         
         </ListItemSecondaryAction>
@@ -140,11 +188,64 @@ const theme = createMuiTheme({
             </CardActionArea>
         </Card>))}
         </Container>
-        <Container align="center" style={{marginTop:"2%"}}>
+        {check? <Container align="center" style={{marginTop:"2%"}}>
+       
             <Fab color="primary" onClick={(e)=>{
                 setopen(true);
             }}><Add></Add></Fab>
-        </Container>
+             <Typography variant="h5" style={{fontWeight:"bolder",color:"grey",marginTop:"1%"}}> Add Task</Typography>
+        </Container>:<></>}
+        <Dialog
+        open={updateb}
+        onClose={()=>{
+            setopen(false);
+        }}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+      <LoadingOverlay  active={upd}  spinner={<HashLoader color={"#2196f3"}/>}>
+        <DialogTitle id="alert-dialog-title">{"Add Task"}</DialogTitle>
+        <DialogContent>
+          <TextField style={{marginTop:"2%"}} label="Task Name" defaultValue={updatetemp1} onChange={(e)=>{
+              setupdatetemp1(e.target.value);
+          }} variant="outlined" fullWidth/>
+          <TextField style={{marginTop:"2%"}} label="Task details" defaultValue={updatetemp2} onChange={(e)=>{
+              setupdatetemp2(e.target.value);
+          }} variant="outlined" fullWidth/>
+          
+          
+         
+         
+         
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={()=>{
+              setupdateb(false);
+          }} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={async (e)=>{
+    //           var temp=tasklist;
+    //           temp.push( {taskdetails:temp2,
+    //   taskName:temp1,
+    // });
+    // settasklist(temp);
+    setupd(true);
+    var data =await put(updatetask(),{
+      "Task_name":updatetemp1,
+      "Task_details":updatetemp2,
+      "id":updatetemp3
+    });
+    setupd(false);
+    setupdateb(false);
+              setopen(false);
+              setcheck(false);
+          }} color="primary" autoFocus>
+            UPDATE
+          </Button>
+        </DialogActions>
+        </LoadingOverlay>
+      </Dialog>
                </MuiThemeProvider>
           </>
       );
