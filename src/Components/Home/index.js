@@ -29,6 +29,7 @@ import {
  
   
 } from "@material-ui/core";
+import { Link } from "react-router-dom";
 import { Add,Image,Menu,CloudUpload } from "@material-ui/icons";
 import { KeyboardDatePicker, MuiPickersUtilsProvider,} from "@material-ui/pickers";
 import { createMuiTheme } from "@material-ui/core/styles";
@@ -54,7 +55,17 @@ const theme = createMuiTheme({
 
 export default function Index(props) {
     const [open,setopen]=useState(false);
-    
+    const [projectlist,setproject]=useState([]);
+    var temp1="";
+    var temp2="";
+    var temparray=[];
+    var i=0;
+    while (i<projectlist.length)
+    {
+      var temp = projectlist.slice(i,i+3);
+      temparray.push(temp);
+      i=i+3;
+    }
   const [selectedDate, setSelectedDate] = React.useState(new Date('2014-08-18T21:11:54'));
   return (
     <>
@@ -69,9 +80,13 @@ export default function Index(props) {
       >
         <DialogTitle id="alert-dialog-title">{"Add Project"}</DialogTitle>
         <DialogContent>
-          <TextField style={{marginTop:"2%"}} label="Project Name"  variant="outlined" fullWidth/>
+          <TextField style={{marginTop:"2%"}} label="Project Name" onChange={(e)=>{
+            temp1=e.target.value;
+          }}  variant="outlined" fullWidth/>
           
-          <TextField style={{marginTop:"2%"}} label="deadline" defaultValue={"2021-06-01"}   type="date" variant="outlined" fullWidth/>
+          <TextField style={{marginTop:"2%"}} label="deadline" defaultValue={"2021-06-01"} onChange={(e)=>{
+            temp2=e.target.value;
+          }}  type="date" variant="outlined" fullWidth/>
           <Grid container spacing={2} style={{marginTop:"2%"}}>
           <Grid item>
 
@@ -92,6 +107,12 @@ export default function Index(props) {
             Cancel
           </Button>
           <Button onClick={()=>{
+            var temp=projectlist;
+            temp.push({
+              projectname:temp1,
+              deadline:temp2,
+            });
+            setproject(temp);
               setopen(false);
           }} color="primary" autoFocus>
             ADD
@@ -110,9 +131,22 @@ export default function Index(props) {
         </IconButton></Container>
           </Toolbar>
         </AppBar>
-        <Grid container justify="center" style={{marginTop:"2%"}} spacing={1}>
-          <Grid item xs={3}>
-              <Card>
+      {temparray.length==0?(
+        <Container align="center" style={{marginTop:"2%"}}>
+          <Typography variant="h5" style={{fontWeight:"bolder",color:"grey"}}>No Project Yet</Typography>
+          <Fab color="primary" style={{marginTop:"1%"}} onClick={(e)=>{
+            setopen(true);
+          }}><Add></Add></Fab>
+        </Container>
+      ):(<></>)}
+        {temparray.map((value,index)=>(
+          <Grid container justify="center" style={{marginTop:"2%"}} spacing={1}>
+          {value.map((value,index)=>(
+            <Grid item xs={3} onClick={(e)=>{
+              
+            }}>
+            <Link to={"/project/"+index+"/"+value.projectname}>
+            <Card>
                   <CardActionArea>
                   <ListItem>
         <ListItemAvatar>
@@ -120,7 +154,7 @@ export default function Index(props) {
             <Image />
           </Avatar>
         </ListItemAvatar>
-        <ListItemText primary="Project1" secondary="Jan 9, 2014" />
+        <ListItemText primary={value.projectname} secondary={value.deadline} />
         <ListItemSecondaryAction >
         <IconButton>
         <Menu />
@@ -130,110 +164,12 @@ export default function Index(props) {
         </ListItem>
                   </CardActionArea>
               </Card>
+            </Link>
+              
           </Grid>
-          <Grid item xs={3}>
-              <Card>
-                  <CardActionArea>
-                  <ListItem>
-        <ListItemAvatar>
-          <Avatar>
-            <Image />
-          </Avatar>
-        </ListItemAvatar>
-        <ListItemText primary="Project1" secondary="Jan 9, 2014" />
-        <ListItemSecondaryAction >
-        <IconButton>
-        <Menu />
-        </IconButton>
-        
-        </ListItemSecondaryAction>
-        </ListItem>
-                  </CardActionArea>
-              </Card>
-          </Grid>
-          <Grid item xs={3}>
-              <Card>
-                  <CardActionArea>
-                  <ListItem>
-        <ListItemAvatar>
-          <Avatar>
-            <Image />
-          </Avatar>
-        </ListItemAvatar>
-        <ListItemText primary="Project1" secondary="Jan 9, 2014" />
-        <ListItemSecondaryAction >
-        <IconButton>
-        <Menu />
-        </IconButton>
-        
-        </ListItemSecondaryAction>
-        </ListItem>
-                  </CardActionArea>
-              </Card>
-          </Grid>
+          ))}
         </Grid>
-        <Grid container justify="center" style={{marginTop:"2%"}} spacing={1}>
-          <Grid item xs={3}>
-              <Card>
-                  <CardActionArea>
-                  <ListItem>
-        <ListItemAvatar>
-          <Avatar>
-            <Image />
-          </Avatar>
-        </ListItemAvatar>
-        <ListItemText primary="Project1" secondary="Jan 9, 2014" />
-        <ListItemSecondaryAction >
-        <IconButton>
-        <Menu />
-        </IconButton>
-        
-        </ListItemSecondaryAction>
-        </ListItem>
-                  </CardActionArea>
-              </Card>
-          </Grid>
-          <Grid item xs={3}>
-              <Card>
-                  <CardActionArea>
-                  <ListItem>
-        <ListItemAvatar>
-          <Avatar>
-            <Image />
-          </Avatar>
-        </ListItemAvatar>
-        <ListItemText primary="Project1" secondary="Jan 9, 2014" />
-        <ListItemSecondaryAction >
-        <IconButton>
-        <Menu />
-        </IconButton>
-        
-        </ListItemSecondaryAction>
-        </ListItem>
-                  </CardActionArea>
-              </Card>
-          </Grid>
-          <Grid item xs={3}>
-              <Card>
-                  <CardActionArea>
-                  <ListItem>
-        <ListItemAvatar>
-          <Avatar>
-            <Image />
-          </Avatar>
-        </ListItemAvatar>
-        <ListItemText primary="Project1" secondary="Jan 9, 2014" />
-        <ListItemSecondaryAction >
-        <IconButton>
-        <Menu />
-        </IconButton>
-        
-        </ListItemSecondaryAction>
-        </ListItem>
-                  </CardActionArea>
-              </Card>
-          </Grid>
-        </Grid>
+        ))}
         
       </MuiThemeProvider>
     </>
