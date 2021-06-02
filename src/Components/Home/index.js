@@ -188,7 +188,7 @@ export default function Index(props) {
         {temparray.map((value,index)=>(
           <Grid container justify="center" style={{marginTop:"2%"}} spacing={1}>
           {value.map((value,index)=>(
-            <Grid item xs={3} onClick={(e)=>{
+            <Grid item lg={3} md={4} xs={12} onClick={(e)=>{
               
             }}>
             <LoadingOverlay active={booleanarray[index]}  spinner={<HashLoader color={"#2196f3"}/>}>
